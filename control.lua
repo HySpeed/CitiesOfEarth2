@@ -3,40 +3,41 @@
 -- Credit:
 -- -- The Oddlers Factorio World
 -- -- -- The world loader is done via his code
+-- -- MojoD -- Frontier Extended
+-- -- -- The Pre-Placed Silo is from his work
 --
 -- Feel free to re-use anything you want. It would be nice to give credit where you can.
 
 local event_handler = require("event_handler")
-
-
 MOD_GUI = require("mod-gui")
+
 require("data/config")
 require("data/cities")
 require("data/worlds")
+require("scripts/coe_init")
 require("scripts/coe_gui")
 require("scripts/coe_setup")
+require("scripts/coe_silo")
 require("scripts/oddler_world_gen")
 
 
 script.on_init(function() OnInit() end)
-script.on_event(defines.events.on_gui_click,       function(event) OnGuiClick(event) end)
-script.on_event(defines.events.on_player_created,  function(event) OnPlayerCreated(event) end)
-script.on_event(defines.events.on_chunk_generated, function(event) OnChunkGenerated(event) end)
+script.on_event(defines.events.on_gui_click,         function(event) ProcessGuiEvent(event) end)
+-- script.on_event("coe2_destinations_dialog",          function(event) ProcessGuiEvent(event) end)
+-- script.on_event(defines.events.on_lua_shortcut,      function(event) ProcessShortcut(event) end)
 
--- ---------------------------------
+script.on_event(defines.events.on_chunk_generated,   function(event) OnChunkGenerated(event) end)
+script.on_event(defines.events.on_research_finished, function(event) RemoveSiloCrafting(event) end)
+script.on_event(defines.events.on_player_created,    function(event) OnPlayerCreated(event) end)
+script.on_event(defines.events.on_player_died,       function(event) RecordPlayerDeath(event) end)
+script.on_event(defines.events.on_rocket_launched,   function(event) RecordRocketLaunch(event) end)
 
+--------------------------------------------------------------------------------
 
 function OnInit()
-  -- log("~OnInit")
 
   SkipIntro()
-
-  -- only do this part if it hasn't been done yet.
-  -- if not global.coe then
-    local world_map = InitSettings()
-    InitWorld(world_map)
-    -- BuildCities()
-  -- end -- if
+  InitWorld(InitSettings())
 
 -- TODO: CHANGE WHEN DEV COMPLETE
 -- EnableDevConfiguration()
@@ -44,64 +45,94 @@ function OnInit()
 
 end -- OnInit
 
-function InitSettings()
-  -- log("~InitSettings - start")
-
--- TODO use a surface named "Earth"
-  -- surface
-  global.surface = game.surfaces["nauvis"]
-
-  -- coe data structure
-  global.coe = {["cities"] = {}, ["players"] = {}}
-
-----
--- Load mod settings
--- World Map to use ('Worlds' is defined in "data/worlds.lua")
-  local world_map = settings.global["coe2_world-map"].value
-  global.coe.map_index = Worlds[world_map].map_index
-  local detail_factor = Worlds[world_map].detail_factor
-
--- Chosen Spawn location
-  global.coe.spawn_city_name = settings.global["coe2_spawn-position"].value
-
-  -- Map Scaling factor
-  local map_scale = settings.global["coe2_map-scale"].value
-  global.coe.size_multipler = map_scale * detail_factor
-
--- log("~world_map : " .. world_map)
--- log("~map_index : " .. global.coe.map_index)
--- log("~detail    : " .. detail_factor)
--- log("~scale     : " .. map_scale)
--- log("~position  : " .. global.coe.spawn_city_name)
-
--- Setup based on chosen settings
--- Get spawn by looking up the selection and map index in 'Cities' table
-  local spawn = Cities[global.coe.spawn_city_name][global.coe.map_index]
-
-  -- Adjust spawn for map-scale factor and detail level
-  spawn = {
-      x = spawn.x * global.coe.size_multipler,
-      y = spawn.y * global.coe.size_multipler
-  }
-  -- log("~adjusted spawn: " .. spawn.x .. "," .. spawn.y)
-
-  global.coe.map_scale = map_scale
-  global.coe.spawn = spawn
-  return world_map
-end -- InitSettings
-
 --------------------------------------------------------------------------------
 
 function OnPlayerCreated(event)
-  -- log("~OnPlayerCreated - start")
-  local player = game.players[event.player_index]
-  CreateButton_ShowTargets(player)
-  -- CreateShowInfoFrame(player)
+  if event.player_index == nil then return end
+  CreateButton_ShowTargets(game.players[event.player_index])
 end -- OnPlayerCreated
 
+--------------------------------------------------------------------------------
+
 function OnChunkGenerated(event)
-  GenerateChunk(event)
+  GenerateChunk_World(event)
+  if global.coe.pre_place_silo then --and not global.coe.silo_created then
+    local silo_position = CalcTPOffset(global.coe.silo_city_name)
+      --create tiles around silo when generating chunk (for performance, do it only when chunk is generated, not before)
+    if ((event.area.left_top.x  <= silo_position.x+7  and silo_position.x+7  <= event.area.right_bottom.x)  or
+        (event.area.left_top.x  <= silo_position.x+21 and silo_position.x+21 <= event.area.right_bottom.x)) and
+       ((event.area.left_top.y  <= silo_position.y+7  and silo_position.y+7  <= event.area.right_bottom.y)  or
+        (event.area.left_top.y  <= silo_position.y+21 and silo_position.y+21 <= event.area.right_bottom.y)) then
+          PlaceSilo(global.coe.surface, silo_position)
+          SetSiloTiles(global.coe.surface, silo_position)
+    end
+  end
 end -- OnChunkGenerated
+
+--------------------------------------------------------------------------------
+
+function RecordPlayerDeath(event)
+  if global.coe.launches_per_death <= 0 then return end
+
+  global.coe.launches_to_win = global.coe.launches_to_win + global.coe.launches_per_death
+  game.print("The death of " .. game.players[event.player_index].name .. " has increased the number of rocket launches needed by: " .. tostring(global.coe.launches_per_death))
+  game.print(tostring(global.coe.launches_to_win - global.coe.rockets_launched) .. " more rockets need to be launched.")
+end -- RecordPlayerDeath
+
+--------------------------------------------------------------------------------
+
+function RecordRocketLaunch(event)
+  if global.coe.launches_per_death <= 0 then return end
+  -- game.print("~ rocket launched")
+
+  local rocket = event.rocket
+  if not (rocket and rocket.valid) then return end
+
+  global.coe.launch_success = global.coe.launch_success or false
+  if global.coe.launch_success then return end
+
+  --  check contents of rocket - do not count empty rockets
+  if event.rocket.has_items_inside() then
+    global.coe.rockets_launched = global.coe.rockets_launched + 1
+    if global.coe.rockets_launched >= global.coe.launches_to_win then
+      global.coe.launch_success = true
+      game.set_game_state
+      {
+        game_finished = true,
+        player_won = true,
+        can_continue = true,
+        victorious_force = rocket.force
+      }
+      return
+    else
+      game.print(tostring(global.coe.rockets_launched) .. " rockets have been launched.")
+      game.print(tostring(global.coe.launches_to_win - global.coe.rockets_launched) .. " more rockets need to be launched.")
+    end
+  else
+    game.print("! An empty rocket was launched! -- that doesn't count toward the total!")
+    game.print(tostring(global.coe.launches_to_win - global.coe.rockets_launched) .. " more rockets need to be launched.")
+  end
+
+end --RecordRocketLaunch
+
+--------------------------------------------------------------------------------
+
+function RemoveSiloCrafting(event)
+  if global.coe.pre_place_silo then
+    local recipes = event.research.force.recipes
+    if recipes["rocket-silo"] then
+      recipes["rocket-silo"].enabled = false
+    end
+  end
+end -- RemoveSiloCrafting
+
+--------------------------------------------------------------------------------
+
+-- function ProcessShortcut(event)
+--   if event.prototype_name == "coe2_destinations_shortcut" then
+--     ProcessGuiEvent(event)
+--   end
+-- end -- ProcessShortcut
 
 --------------------------------------------------------------------------------
 
@@ -116,13 +147,13 @@ end -- SkipIntro
 
 function EnableDevConfiguration()
   -- DEV: disable aliens
-  -- global.coe.enemy_enabled = global.surface.map_gen_settings
-  local mgs = global.surface.map_gen_settings
+  -- global.coe.enemy_enabled = global.coe.surface.map_gen_settings
+  local mgs = global.coe.surface.map_gen_settings
   -- log( "~enemy-base: " .. mgs.autoplace_controls["enemy-base"].size )
   mgs.autoplace_controls["enemy-base"].size = 0
-  global.surface.map_gen_settings = mgs
+  global.coe.surface.map_gen_settings = mgs
   -- log( "~disabled enemy - enemy-base: " .. mgs.autoplace_controls["enemy-base"].size )
-  for _, entity in pairs(global.surface.find_entities_filtered({force="enemy"})) do
+  for _, entity in pairs(global.coe.surface.find_entities_filtered({force="enemy"})) do
     entity.destroy()
   end
 

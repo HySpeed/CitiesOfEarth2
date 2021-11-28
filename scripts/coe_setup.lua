@@ -1,5 +1,6 @@
---coe_setup.lua
+-- coe_setup.lua
 require("data/cities")
+
 
 function BuildCityNameList()
   local city_names = {}
@@ -8,6 +9,7 @@ function BuildCityNameList()
   end
   return city_names
 end -- BuildCityNameList
+
 
 function BuildPlayerNameList()
   local result = {}
@@ -18,12 +20,14 @@ function BuildPlayerNameList()
   return result
 end -- BuildPlayerNameList
 
+
 function BuildPlayerList()
   global.coe.players = {}
   for _, player in pairs(game.players) do
     table.insert(global.coe.players, player)
   end
 end -- BuildPlayerList
+
 
 function GetPlayerByName(name)
   for _, player in pairs(global.coe.players) do
@@ -33,6 +37,7 @@ function GetPlayerByName(name)
   end
 end -- GetPlayerByName
 
+
 -- return a random amount to vary teleporting
 function GetRandomAmount(max)
   local result = 0
@@ -40,5 +45,4 @@ function GetRandomAmount(max)
     result = math.random(-max, max)
   end
   return result
-end
-
+end -- GetRandomAmount
