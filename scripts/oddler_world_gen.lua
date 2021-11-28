@@ -8,7 +8,7 @@ require("worlds/earth_pacific_detailed")
 
 -- Initialize World data
 function InitWorld(world_map)
-  log("~coe: InitWorld - start")
+  -- log("~coe~InitWorld - start")
 
   -- factorio world code (will be moved to function)
   --Terrain codes should be in sync with the ConvertMap code
@@ -38,18 +38,9 @@ function InitWorld(world_map)
   global.coe.repeat_map = false
   global.coe.out_of_map_code = "o" -- The terrain to use for everything outside the map
 
-  -- Set correct world
-  -- local terrain_types = nil
-  -- if global.coe.map_detail_factor == 1 then
-  --   global.coe.terrain_types = map_data_detailed
-  -- else
-  --   global.coe.terrain_types = map_data_normal
-  -- end
 
   -- Get correct world data
 ---filename indexes to map data variable name
-log("~world_map: " .. world_map)
-log("~filename: " .. Worlds[world_map].filename)
   global.coe.terrain_types = map_data[Worlds[world_map].filename]
 
   ----- Load map
@@ -64,7 +55,6 @@ log("~filename: " .. Worlds[world_map].filename)
   --Decompress one line to get the width
   DecompressLine(0)
 
-  log("~coe: InitWorld - end")
 end -- InitWorld
 
 -- Decompress map data
@@ -119,11 +109,11 @@ local function getWorldTileName(x, y)
   local safe_zone = x >= -safe_zone_size and x < safe_zone_size and y >= -safe_zone_size and y < safe_zone_size
 
   --spawn
-  x = x + spawn.x
-  y = y + spawn.y
+  x = (x + spawn.x) / scale
+  y = (y + spawn.y) / scale
   --scaling
-  x = x / scale
-  y = y / scale
+  -- x = x / scale
+  -- y = y / scale
 
   --get cells you're between
   local top = math.floor(y)
@@ -171,7 +161,7 @@ end -- getWorldTileName
 
 
 -- Chunk generation
-function GenerateChunk(event)
+function GenerateChunk_World(event)
     if (event.surface.name ~= "nauvis") then
         return
     end
@@ -194,4 +184,4 @@ function GenerateChunk(event)
     surface.destroy_decoratives({area = event.area})
     surface.regenerate_decorative(nil, positions)
     surface.regenerate_entity(nil, positions)
-end -- GenerateChunk
+end -- GenerateChunk_World

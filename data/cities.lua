@@ -4,30 +4,23 @@
 -- pacific offsets - Africa : x = -1820, y = +30
 -- pacific offsets - America: x = +2210, y = +30
 
+
 Cities = {
     ["Africa, Mali, Bamako"] = {
       ["earth_atlantic"] = { x = 1920, y =  840 },
       ["earth_pacific"] =  { x =  100, y =  870 }
     },
-    ["Africa, Congo, Katanga"] = {
-      ["earth_atlantic"] = { x = 2240, y = 1190 },
-      ["earth_pacific"] =  { x = 420,  y = 1220 }
-    },
     ["Africa, Chad, Mongo"] = {
-      ["earth_atlantic"] = { x = 2240, y =  840 },
-      ["earth_pacific"] =  { x = 420,  y =  870 }
+      ["earth_atlantic"] = { x = 2280, y =  840 },
+      ["earth_pacific"] =  { x = 460,  y =  870 }
     },
     ["Africa, Egypt, Cairo"] = {
       ["earth_atlantic"] = { x = 2350, y =  670 },
       ["earth_pacific"] =  { x =  530, y =  700 }
     },
-    ["Africa, Morocco, Marrakech"] = {
-      ["earth_atlantic"] = { x = 1920, y =  640 },
-      ["earth_pacific"] =  { x =  100, y =  670 }
-    },
-    ["Asia, China, Beijing"] = {
-      ["earth_atlantic"] = { x = 3270, y =  540 },
-      ["earth_pacific"] =  { x = 1450, y =  570 }
+    ["Africa, Gauteng, Johannesburg"] = {
+      ["earth_atlantic"] = { x = 2310, y = 1220 },
+      ["earth_pacific"] =  { x =  490, y = 1250 }
     },
     ["Asia, China, Kunming"] = {
       ["earth_atlantic"] = { x = 3150, y =  700 },
@@ -69,10 +62,6 @@ Cities = {
       ["earth_atlantic"] = { x = 3160, y =  260 },
       ["earth_pacific"] =  { x = 1340, y =  290 }
     },
-    ["Europe, Russia, Pechora"] = {
-      ["earth_atlantic"] = { x = 2650, y =  270 },
-      ["earth_pacific"] =  { x =  830, y =  300 }
-    },
     ["Europe, Russia, Yakutsk"] = {
       ["earth_atlantic"] = { x = 3430, y =  290 },
       ["earth_pacific"] =  { x = 1610, y =  320 }
@@ -81,21 +70,25 @@ Cities = {
       ["earth_atlantic"] = { x = 1950, y =  540 },
       ["earth_pacific"] =  { x =  130, y =  570 }
     },
+    ["Europe, UK, London"] = {
+      ["earth_atlantic"] = { x = 2000, y =  390 },
+      ["earth_pacific"] =  { x =  180, y =  420 }
+    },
     ["North America, Canada, Brisay"] = {
       ["earth_atlantic"] = { x = 1200, y =  330 },
       ["earth_pacific"] =  { x = 3410, y =  360 }
     },
-    ["North America, Canada, Kapuskasing"] = {
-      ["earth_atlantic"] = { x = 1090, y =  430 },
-      ["earth_pacific"] =  { x = 3300, y =  460 }
+    ["North America, Canada, Churchill"] = {
+      ["earth_atlantic"] = { x =  970, y =  380 },
+      ["earth_pacific"] =  { x = 3190, y =  410 }
     },
-    ["North America, Canada, Saskatoon"] = {
-      ["earth_atlantic"] = { x =  810, y =  380 },
-      ["earth_pacific"] =  { x = 3020, y =  410 }
+    ["North America, Canada, Nahanni"] = {
+      ["earth_atlantic"] = { x =  690, y =  330 },
+      ["earth_pacific"] =  { x = 2900, y =  360 }
     },
     ["North America, Greenland, Summit Camp"] = {
-      ["earth_atlantic"] = { x = 1550, y =  160 },
-      ["earth_pacific"] =  { x = 3370, y =  200 }
+      ["earth_atlantic"] = { x = 1900, y =  160 },
+      ["earth_pacific"] =  { x = 3720, y =  200 }
     },
     ["North America, Mexico, Mexico City"] = {
       ["earth_atlantic"] = { x =  880, y =  720 },
@@ -135,6 +128,7 @@ Cities = {
     }
 }
 
+
 -- tp_offsets_atlantic = {
 --   ["Africa, Mali, Bamako"] = 0,0
 --   ["Africa, Congo, Katanga"] = 320,350
@@ -155,12 +149,13 @@ Cities = {
 --   ["Europe, Russia, Pechora"] = 730,-570
 --   ["Europe, Russia, Yakutsk"] = 1510,-555
 --   ["Europe, Spain, Madrid"] = 30,-300
+--   ["Europe, UK, London"] = //-180?, 980 (post TP: -1640, -960)
 --   ["Oceania, Australia, Broome"] = 1480,400
 --   ["Oceania, Australia, Sydney"] = 1740,520
 --   -- atlantic
 --   ["North America, Canada, Brisay"] = -720,-510
 --   ["North America, Canada, Kapuskasing"] = -830,-410
---   ["North America, Canada, Saskatoon"] = -1110,-455
+--   ["North America, Canada, Nahanni"] = ?,?
 --   ["North America, Greenland, Summit Camp"] = -370,-675
 --   ["North America, Mexico, Mexico City"] = -1040,-120
 --   ["North America, United States, Boise"] = -1200,-330
@@ -172,7 +167,7 @@ Cities = {
 --   -- pacific
 --   ["North America, Canada, Brisay"] = 2640,-510
 --   ["North America, Canada, Kapuskasing"] = 2750,-410
---   ["North America, Canada, Saskatoon"] = 3030,-455
+--   ["North America, Canada, Nahanni"] = ?,?
 --   ["North America, Greenland, Summit Camp"] = 3690,-675
 --   ["North America, Mexico, Mexico City"] = 2980,-120
 --   ["North America, United States, Boise"] = ,-330
