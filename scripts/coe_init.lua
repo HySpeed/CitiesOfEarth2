@@ -4,6 +4,7 @@ function InitSettings()
 
   -- coe data structure
   global.coe = {
+    city_count = 0,
     ["cities"] = {},
     ["players"] = {},
     launches_to_win = 1,
@@ -11,35 +12,60 @@ function InitSettings()
     launch_success = false
   }
 
+  if game.surfaces[SURFACE_NAME] == nil then
+    game.create_surface(SURFACE_NAME)
+  end
   -- TODO create and use a surface named "Earth"
   -- surface
-  global.coe.surface = game.surfaces["nauvis"]
-
+--  global.coe.surface = game.surfaces["nauvis"]
+  global.coe.surface = game.surfaces[SURFACE_NAME]
+  if global.coe.city_names == nil then
+    SetupCityNames()
+  end
 
 -----  -----  ----- ----- -----  -----  ----- ----- -----  -----  ----- -----
--- Load mod settings
+
+  -- Load mod settings
 -- Which World Map to use ('Worlds' is defined in "data/worlds.lua")
-  local world_map = settings.global["coe2_world-map"].value
+  local world_map = settings.startup["coe2_world-map"].value
   global.coe.map_index = Worlds[world_map].map_index
   local detail_factor = Worlds[world_map].detail_factor
 
   -- Spawn location
-  global.coe.spawn_city_name = settings.global["coe2_spawn-position"].value
-
+  local spawn_city_name = settings.startup["coe2_spawn-position"].value
+  if spawn_city_name == "Random City Location" then
+    local spawn_index = 1 -- default to Africa
+    spawn_index = math.random(2, global.coe.city_count) - 1 -- skip first entry "random"
+    spawn_city_name = global.coe.city_names[spawn_index]
+  end
+  global.coe.spawn_city_name = spawn_city_name
+  log("~spawn : " .. global.coe.spawn_city_name)
+  
   -- Map Scaling factor
-  global.coe.map_scale = settings.global["coe2_map-scale"].value
+  global.coe.map_scale = settings.startup["coe2_map-scale"].value
   global.coe.size_multipler = global.coe.map_scale * detail_factor
 
   -- Pre-Place Silo
-  global.coe.pre_place_silo = settings.global["coe2_pre-place-silo"].value
-  global.coe.silo_city_name = settings.global["coe2_silo-position"].value
+  global.coe.pre_place_silo = settings.startup["coe2_pre-place-silo"].value
+  local silo_city_name = settings.startup["coe2_silo-position"].value
+  if silo_city_name == "Random City Location" then
+    local silo_index = 1 -- default to Africa
+    silo_index = math.random(2, global.coe.city_count) -1 -- skip first entry "random"
+    silo_city_name = global.coe.city_names[silo_index]
+  end
+  global.coe.silo_city_name = silo_city_name
+  log("~silo : " .. global.coe.silo_city_name)
 
   -- Launches per Death
-  global.coe.launches_per_death = settings.global["coe2_launches-per-death"].value
+  global.coe.launches_per_death = settings.startup["coe2_launches-per-death"].value
   -- disable 'freeplay' rocket launch victory so they can be tied to extra launches
   if global.coe.launches_per_death > 0 then
     remote.call("silo_script", "set_no_victory", true)
   end
+
+  -- Enable teleport controls (stored for displaying messages later)
+  global.coe.tp_to_city = settings.global["coe2_tp-to-city"].value
+  global.coe.tp_to_player = settings.global["coe2_tp-to-player"].value
 
 -----  -----  ----- ----- -----  -----  ----- ----- -----  -----  ----- -----
 -- Setup based on chosen settings

@@ -1,7 +1,6 @@
 -- coe_gui.lua
 
 function ProcessGuiEvent(event)
-  -- game.print("~GUI event")
   if not event.element then return end
 
   local player = game.players[event.player_index]
@@ -9,9 +8,6 @@ function ProcessGuiEvent(event)
 
   if element.name == "coe_button_show_targets" then
     ShowTargetChoices(event, player)
-  -- elseif element.name == "coe_cities_dropdown" then
-  --   game.print("~coe_cities_dropdown")
-  -- TODO: goto selected city when chosen - eliminates need for "go button"
   elseif element.name == "coe_button_city_go" then
     TPtoCity(player, element.parent)
     element.parent.parent.parent.destroy()
@@ -23,7 +19,7 @@ function ProcessGuiEvent(event)
   elseif element.name == "coe_button_info_close" then
     element.parent.destroy()
   end
-end -- OnGuiClick
+end -- ProcessGuiEvent
 
 
 function CreateButton_ShowTargets(player)
@@ -42,16 +38,10 @@ end -- CreateButton_ShowTargets
 
 function TPtoCity(player, frame)
   local ui_city_list = frame.coe_cities_dropdown
-  local chosen_city_name = ui_city_list.get_item(ui_city_list.selected_index)
+  local dest_name = ui_city_list.get_item(ui_city_list.selected_index)
+  local destination = CalcTPOffset(dest_name)
 
-  local destination = CalcTPOffset(chosen_city_name)
-
-  game.print({"", player.name, ": ", chosen_city_name, "(", destination.x, ",", destination.y, ")"})
-  -- How to loop until valid teleport destination can be found?
-  -- if global.coe.surface.can_place_entity{name="character", position = {destination.x, destination.y}} then
-  -- player.teleport({destination.x, destination.y}, global.coe.surface)
-
-  player.teleport({destination.x + GetRandomAmount(WOBBLE), destination.y + GetRandomAmount(WOBBLE)}, global.coe.surface)
+  PerformTeleport(player, destination, dest_name)
 end -- TPtoCity
 
 
@@ -61,9 +51,30 @@ function TPtoPlayer(player, frame)
   local target_player = GetPlayerByName(target_player_name)
   local destination = target_player.position
 
-  game.print({"", player.name, " -> ", target_player.name, "(", destination.x, ",", destination.y, ")"})
-  player.teleport({destination.x + GetRandomAmount(WOBBLE), destination.y + GetRandomAmount(WOBBLE)}, global.coe.surface)
+  PerformTeleport(player, destination, target_player_name)
 end -- TPtoPlayer
+
+
+-- teleports player after checking if target is safe - loops until success
+function PerformTeleport(player, destination, dest_name) 
+  destination.x = destination.x + GetRandomAmount(WOBBLE)
+  destination.y = destination.y + GetRandomAmount(WOBBLE)
+
+  -- loop until valid teleport destination can be found
+  local valid_dest = false
+  local count = 0
+  while valid_dest == false and count <= 100 do
+     if global.coe.surface.can_place_entity{name="character", position = {destination.x, destination.y}} then
+       valid_dest = true
+       destination.x = destination.x + GetRandomAmount(WOBBLE/2)
+       destination.y = destination.y + GetRandomAmount(WOBBLE/2)
+      end
+     count = count + 1 -- limits to prevent infinate loop
+   end
+
+  game.print("Teleported: " .. player.name .. " to " .. dest_name .. "  (" .. destination.x .. "," .. destination.y .. ")")
+  player.teleport(destination, global.coe.surface)
+end
 
 
 function ShowTargetChoices(event, player)
@@ -78,7 +89,6 @@ end -- ShowTargetChoices
 function CalcTPOffset(target_city_name)
   local target_city_loc = Cities[target_city_name][global.coe.map_index]
   local spawn_city_loc = Cities[global.coe.spawn_city_name][global.coe.map_index]
-
   local dest_offsets = {
     x = -(spawn_city_loc.x - target_city_loc.x),
     y = -(spawn_city_loc.y - target_city_loc.y)
@@ -115,11 +125,10 @@ function BuildTargetListFrame(gui, player)
     direction = "vertical"
   })
 
-  local city_names = BuildCityNameList()
   city_flow.add({
     type = "drop-down",
     name = "coe_cities_dropdown",
-    items = city_names,
+    items = global.coe.gui_city_names,
     selected_index = 1
   })
 
@@ -128,6 +137,15 @@ function BuildTargetListFrame(gui, player)
     name = "coe_button_city_go",
     caption = {"coe.button-city-go"}
   })
+  -- only enable if enabled in settings
+  if settings.global["coe2_tp-to-city"].value == true then
+    city_flow["coe_button_city_go"].enabled = true
+    city_flow["coe_button_city_go"].caption = {"coe.button-city-go-enabled"}
+  else
+    city_flow["coe_button_city_go"].enabled = false
+    city_flow["coe_button_city_go"].caption = {"coe.button-city-go-disabled"}
+  end
+
 
   local player_flow = city_and_player_flow.add({
     type = "flow",
@@ -135,21 +153,25 @@ function BuildTargetListFrame(gui, player)
     direction = "vertical"
   })
 
-  -- only show player list if on same surface
-  if player.surface == global.coe.surface then
-    local player_names = BuildPlayerNameList()
-    player_flow.add({
-      type = "drop-down",
-      name = "coe_players_dropdown",
-      items = player_names,
-      selected_index = 1
-    })
+  local player_names = BuildPlayerNameList()
+  player_flow.add({
+    type = "drop-down",
+    name = "coe_players_dropdown",
+    items = player_names,
+    selected_index = 1
+  })
 
-    player_flow.add({
-      type = "button",
-      name = "coe_button_player_go",
-      caption = {"coe.button-player-go"}
-    })
+  player_flow.add({
+    type = "button",
+    name = "coe_button_player_go"
+  })
+  -- only enable if enabled in settings
+  if settings.global["coe2_tp-to-player"].value == true then
+    player_flow["coe_button_player_go"].enabled = true
+    player_flow["coe_button_player_go"].caption = {"coe.button-player-go-enabled"}
+  else
+    player_flow["coe_button_player_go"].enabled = false
+    player_flow["coe_button_player_go"].caption = {"coe.button-player-go-disabled"}
   end
 
   local controls_flow = frame.add({

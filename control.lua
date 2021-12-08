@@ -22,26 +22,22 @@ require("scripts/oddler_world_gen")
 
 
 script.on_init(function() OnInit() end)
-script.on_event(defines.events.on_gui_click,         function(event) ProcessGuiEvent(event) end)
--- script.on_event("coe2_destinations_dialog",          function(event) ProcessGuiEvent(event) end)
--- script.on_event(defines.events.on_lua_shortcut,      function(event) ProcessShortcut(event) end)
+script.on_event(defines.events.on_gui_click,          function(event) ProcessGuiEvent(event) end)
 
-script.on_event(defines.events.on_chunk_generated,   function(event) OnChunkGenerated(event) end)
-script.on_event(defines.events.on_research_finished, function(event) RemoveSiloCrafting(event) end)
-script.on_event(defines.events.on_player_created,    function(event) OnPlayerCreated(event) end)
-script.on_event(defines.events.on_player_died,       function(event) RecordPlayerDeath(event) end)
-script.on_event(defines.events.on_rocket_launched,   function(event) RecordRocketLaunch(event) end)
+script.on_event(defines.events.on_chunk_generated,    function(event) OnChunkGenerated(event) end)
+script.on_event(defines.events.on_research_finished,  function(event) RemoveSiloCrafting(event) end)
+script.on_event(defines.events.on_player_created,     function(event) OnPlayerCreated(event) end)
+script.on_event(defines.events.on_player_joined_game, function(event) OnPlayerJoined(event) end)
+script.on_event(defines.events.on_player_died,        function(event) RecordPlayerDeath(event) end)
+script.on_event(defines.events.on_rocket_launched,    function(event) RecordRocketLaunch(event) end)
+script.on_event(defines.events.on_runtime_mod_setting_changed, function(event) RuntimeSettingChanged(event) end)
 
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 function OnInit()
 
   SkipIntro()
   InitWorld(InitSettings())
-
--- TODO: CHANGE WHEN DEV COMPLETE
--- EnableDevConfiguration()
--- TODO: CHANGE WHEN DEV COMPLETE
 
 end -- OnInit
 
@@ -49,14 +45,32 @@ end -- OnInit
 
 function OnPlayerCreated(event)
   if event.player_index == nil then return end
-  CreateButton_ShowTargets(game.players[event.player_index])
+
+  local player = game.players[event.player_index]
+  CreateButton_ShowTargets(player)
+  player.teleport({ GetRandomAmount(WOBBLE), GetRandomAmount(WOBBLE) }, game.surfaces[SURFACE_NAME])
+
 end -- OnPlayerCreated
+
+
+--------------------------------------------------------------------------------
+
+function OnPlayerJoined(event)
+  if global.coe.city_names == nil then
+    SetupCityNames()
+  end
+  
+-- TODO: CHANGE WHEN DEV COMPLETE
+-- EnableDevConfiguration()
+-- TODO: CHANGE WHEN DEV COMPLETE
+end
+
 
 --------------------------------------------------------------------------------
 
 function OnChunkGenerated(event)
   GenerateChunk_World(event)
-  if global.coe.pre_place_silo then --and not global.coe.silo_created then
+  if global.coe.pre_place_silo and not global.coe.silo_created then
     local silo_position = CalcTPOffset(global.coe.silo_city_name)
       --create tiles around silo when generating chunk (for performance, do it only when chunk is generated, not before)
     if ((event.area.left_top.x  <= silo_position.x+7  and silo_position.x+7  <= event.area.right_bottom.x)  or
@@ -83,7 +97,6 @@ end -- RecordPlayerDeath
 
 function RecordRocketLaunch(event)
   if global.coe.launches_per_death <= 0 then return end
-  -- game.print("~ rocket launched")
 
   local rocket = event.rocket
   if not (rocket and rocket.valid) then return end
@@ -128,11 +141,24 @@ end -- RemoveSiloCrafting
 
 --------------------------------------------------------------------------------
 
--- function ProcessShortcut(event)
---   if event.prototype_name == "coe2_destinations_shortcut" then
---     ProcessGuiEvent(event)
---   end
--- end -- ProcessShortcut
+
+function RuntimeSettingChanged(event)
+  if event.setting == "coe2_tp-to-city" then
+    if settings.global["coe2_tp-to-city"].value == true then
+      game.print("+ Telporting to Cities enabled +")
+    else
+      game.print("- Telporting to Cities disabled -")
+    end
+  end
+
+  if event.setting == "coe2_tp-to-player" then
+    if settings.global["coe2_tp-to-player"].value == true then
+      game.print("+ Player to Player Telporting disabled +")
+    else
+      game.print("- Player to Player Telporting disabled -")
+    end
+  end
+end 
 
 --------------------------------------------------------------------------------
 
@@ -147,14 +173,11 @@ end -- SkipIntro
 
 function EnableDevConfiguration()
   -- DEV: disable aliens
-  -- global.coe.enemy_enabled = global.coe.surface.map_gen_settings
   local mgs = global.coe.surface.map_gen_settings
-  -- log( "~enemy-base: " .. mgs.autoplace_controls["enemy-base"].size )
   mgs.autoplace_controls["enemy-base"].size = 0
   global.coe.surface.map_gen_settings = mgs
-  -- log( "~disabled enemy - enemy-base: " .. mgs.autoplace_controls["enemy-base"].size )
   for _, entity in pairs(global.coe.surface.find_entities_filtered({force="enemy"})) do
     entity.destroy()
   end
-
+  game.print("! development mode enabled !")
 end -- EnableDevConfiguration
