@@ -18,15 +18,15 @@ The features have been simplified:
 
 ## **Initial Spawn Point**
 
-* City: Africa | Mali | Bamako
-* Atlantic Spawn: 1920 | 840
-* Pacific Spawn :  100 | 870
+* City: Africa, Mali, Bamako
+* Atlantic Spawn: 1920, 840
+* Pacific Spawn :  100, 870
 * * These numbers will automatically adjust by scale & detail.
-* * After map creation | the spawn point is set to 0,0.  All teleports are relative to 0,0.
+* * After map creation, the spawn point is set to 0,0.  All teleports are relative to 0,0.
 The game sets the rest of the map based on this.  
 
 
-## Worlds | Regions | and Cities
+## Worlds, Regions, and Cities
 
 There are two 'worlds'.  Both are Earth.  
 * Atlantic - The center of the map is the Atlantic Ocean.  This puts America on the 'right' side and Africa & Europe on the 'left' side of the game map.  This is the traditional view of Earth on a map.
@@ -78,9 +78,15 @@ City information was pulled from [Mapcarta](https://mapcarta.com/).
 ## Known Issues:
 * **You must delete mod-settings.dat for changes to cities.lua to be available.**  If you change a lua data file, you'll need to delete the mod-settings.dat file.
 
+v1.3.0
+* Added "Random City Location" to Spawn and Silo locations
+* Added in-game controls to enable / disable teleporting
+  * TP to City
+  * TP to Player 
+
 v1.2.2
 * Fixed bug where not choosing pre-placed silo still removed silo item from crafting list
-* 
+
 v1.2.0
 * Added London, UK., Changed other cities: Churchill, Nhanni, Johannesburg  
   * **You must delete mod-settings.dat for this to be available.**

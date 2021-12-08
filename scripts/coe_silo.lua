@@ -40,5 +40,5 @@ function PlaceSilo(surface, silo_position)
     silo.minable = false
     global.coe.silo_created = true;
 
-    game.print("Silo Created")
+    log("~Silo Created: " .. silo_position.x .. ", " .. silo_position.y)
 end -- PlaceSilo

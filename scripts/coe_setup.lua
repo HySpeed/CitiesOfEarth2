@@ -2,12 +2,21 @@
 require("data/cities")
 
 
+function SetupCityNames()
+  global.coe.city_names, global.coe.city_count = BuildCityNameList()
+  global.coe.gui_city_names = global.coe.city_names
+  table.remove(global.coe.gui_city_names, 1) -- "Random City Location"
+end -- SetupCityNames
+
+
 function BuildCityNameList()
   local city_names = {}
+  local city_count = 0
   for city_name, _ in pairs(Cities) do
       table.insert(city_names, city_name)
-  end
-  return city_names
+      city_count = city_count + 1
+    end
+  return city_names, city_count
 end -- BuildCityNameList
 
 
@@ -38,7 +47,7 @@ function GetPlayerByName(name)
 end -- GetPlayerByName
 
 
--- return a random amount to vary teleporting
+-- return a random value
 function GetRandomAmount(max)
   local result = 0
   while (result == 0) do
