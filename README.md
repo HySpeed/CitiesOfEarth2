@@ -16,16 +16,6 @@ The features have been simplified:
 **When first starting a new game there will be a long delay while the map initializes.**
 
 
-## **Initial Spawn Point**
-
-* City: Africa, Mali, Bamako
-* Atlantic Spawn: 1920, 840
-* Pacific Spawn :  100, 870
-* * These numbers will automatically adjust by scale & detail.
-* * After map creation, the spawn point is set to 0,0.  All teleports are relative to 0,0.
-The game sets the rest of the map based on this.  
-
-
 ## Worlds, Regions, and Cities
 
 There are two 'worlds'.  Both are Earth.  
@@ -77,12 +67,19 @@ City information was pulled from [Mapcarta](https://mapcarta.com/).
 
 ## Known Issues:
 * **You must delete mod-settings.dat for changes to cities.lua to be available.**  If you change a lua data file, you'll need to delete the mod-settings.dat file.
+* * **GAMES STARTED WITH 1.3.0 WILL NEED TO BE RESTARTED** (sorry)
+
+v1.3.1
+* Reverted surface names to "nauvis"
+* **GAMES STARTED WITH 1.3.0 WILL NEED TO BE RESTARTED** (sorry)
+* Added safety check on Teleporting
 
 v1.3.0
 * Added "Random City Location" to Spawn and Silo locations
 * Added in-game controls to enable / disable teleporting
   * TP to City
   * TP to Player 
+* Changed surfaces to "Earth" from "nauvis"
 
 v1.2.2
 * Fixed bug where not choosing pre-placed silo still removed silo item from crafting list

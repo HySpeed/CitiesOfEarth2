@@ -56,13 +56,14 @@ end -- OnPlayerCreated
 --------------------------------------------------------------------------------
 
 function OnPlayerJoined(event)
+  global.coe.surface = game.surfaces[SURFACE_NAME]
   if global.coe.city_names == nil then
     SetupCityNames()
   end
   
--- TODO: CHANGE WHEN DEV COMPLETE
+-- TODO: ONLY ENABLE IN DEV
 -- EnableDevConfiguration()
--- TODO: CHANGE WHEN DEV COMPLETE
+-- TODO: ONLY ENABLE IN DEV
 end
 
 
