@@ -12,12 +12,6 @@ function InitSettings()
     launch_success = false
   }
 
-  if game.surfaces[SURFACE_NAME] == nil then
-    game.create_surface(SURFACE_NAME)
-  end
-  -- TODO create and use a surface named "Earth"
-  -- surface
---  global.coe.surface = game.surfaces["nauvis"]
   global.coe.surface = game.surfaces[SURFACE_NAME]
   if global.coe.city_names == nil then
     SetupCityNames()

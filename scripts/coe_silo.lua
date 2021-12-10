@@ -30,7 +30,7 @@ function PlaceSilo(surface, silo_position)
     end
 
     -- Remove enemy bases
-    for _, entity in pairs(game.surfaces[1].find_entities_filtered{area = {{silo_position.x+7, silo_position.y+7},{silo_position.x+21, silo_position.y+21}}, force="enemy"}) do
+    for _, entity in pairs(surface.find_entities_filtered{area = {{silo_position.x+7, silo_position.y+7},{silo_position.x+21, silo_position.y+21}}, force="enemy"}) do
       if entity.type ~= "character" then entity.destroy() end -- Don't go destroying (enemy) players
     end
 
