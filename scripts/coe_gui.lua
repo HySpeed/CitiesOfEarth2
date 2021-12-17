@@ -75,12 +75,12 @@ function PerformTeleport(player, destination, dest_name)
 
   local result = false
   if valid_dest then
-    game.print("Teleported: " .. player.name .. " to " .. dest_name .. "  (" .. destination.x .. "," .. destination.y .. ") count: " .. count)
+    game.print({"", {"coe.teleported"}, player.name, {"coe.to"}, dest_name, "  (", destination.x, ",", destination.y, ") "})
     result = player.teleport(destination, global.coe.surface)
   end
   
   if result == false then
-    player.print("Unable to teleport " .. player.name .. " to " .. dest_name .. "  (" .. destination.x .. "," .. destination.y .. ") count: " .. count)
+    player.print({"", {"coe.unable-to-teleport"}, player.name, {"coe.to"}, dest_name, "  (", destination.x, ",", destination.y, ") ", {"coe.count"}, count})
   end
 end -- PerformTeleport
 

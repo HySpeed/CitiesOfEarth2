@@ -87,11 +87,11 @@ end -- OnChunkGenerated
 --------------------------------------------------------------------------------
 
 function RecordPlayerDeath(event)
-  if global.coe.launches_per_death <= 0 then return end
+  if global.coe.launches_per_death <= 0 or global.coe.launch_success then return end
 
   global.coe.launches_to_win = global.coe.launches_to_win + global.coe.launches_per_death
-  game.print("The death of " .. game.players[event.player_index].name .. " has increased the number of rocket launches needed by: " .. tostring(global.coe.launches_per_death))
-  game.print(tostring(global.coe.launches_to_win - global.coe.rockets_launched) .. " more rockets need to be launched.")
+  game.print({"", {"coe.death-of"}, game.players[event.player_index].name, {"coe.increased-launches"}, tostring(global.coe.launches_per_death)})
+  game.print({"", tostring(global.coe.launches_to_win - global.coe.rockets_launched), {"coe.more-rockets"}, ""})
 end -- RecordPlayerDeath
 
 --------------------------------------------------------------------------------
@@ -119,12 +119,12 @@ function RecordRocketLaunch(event)
       }
       return
     else
-      game.print(tostring(global.coe.rockets_launched) .. " rockets have been launched.")
-      game.print(tostring(global.coe.launches_to_win - global.coe.rockets_launched) .. " more rockets need to be launched.")
+      game.print({"", tostring(global.coe.rockets_launched),  {"coe.rockets-launched"}, ""})
+      game.print({"", tostring(global.coe.launches_to_win - global.coe.rockets_launched), {"coe.more-rockets"}, ""})
     end
   else
-    game.print("! An empty rocket was launched! -- that doesn't count toward the total!")
-    game.print(tostring(global.coe.launches_to_win - global.coe.rockets_launched) .. " more rockets need to be launched.")
+    game.print({"coe.empty-rocket"})
+    game.print({"", tostring(global.coe.launches_to_win - global.coe.rockets_launched), {"coe.more-rockets"}, ""})
   end
 
 end --RecordRocketLaunch
@@ -142,21 +142,20 @@ end -- RemoveSiloCrafting
 
 --------------------------------------------------------------------------------
 
-
 function RuntimeSettingChanged(event)
   if event.setting == "coe2_tp-to-city" then
     if settings.global["coe2_tp-to-city"].value == true then
-      game.print("+ Telporting to Cities enabled +")
+      game.print({"coe.tp-to-city-enabled"})
     else
-      game.print("- Telporting to Cities disabled -")
+      game.print({"coe.tp-to-city-disabled"})
     end
   end
 
   if event.setting == "coe2_tp-to-player" then
     if settings.global["coe2_tp-to-player"].value == true then
-      game.print("+ Player to Player Telporting disabled +")
+      game.print({"coe.tp-to-player-enabled"})
     else
-      game.print("- Player to Player Telporting disabled -")
+      game.print({"coe.tp-to-player-disabled"})
     end
   end
 end 
@@ -164,10 +163,13 @@ end
 --------------------------------------------------------------------------------
 
 function SkipIntro()
+  -- In "sandbox" mode, freeplay is not available
+  if( remote.interfaces["freeplay"] ) then
   -- removes crashsite and cutscene start
-	remote.call("freeplay", "set_disable_crashsite", true)
+  remote.call("freeplay", "set_disable_crashsite", true)
 	-- Skips popup message to press tab to start playing
-	remote.call("freeplay", "set_skip_intro", true)
+    remote.call("freeplay", "set_skip_intro", true)
+  end
 end -- SkipIntro
 
 --------------------------------------------------------------------------------
