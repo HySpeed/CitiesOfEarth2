@@ -162,7 +162,6 @@ end -- getWorldTileName
 
 -- Chunk generation
 function GenerateChunk_World(event)
---    if (event.surface.name ~= "nauvis") then
   if (event.surface.name ~= SURFACE_NAME) then
     return
   end
@@ -186,9 +185,3 @@ function GenerateChunk_World(event)
     surface.regenerate_decorative(nil, positions)
     surface.regenerate_entity(nil, positions)
 end -- GenerateChunk_World
-
--- function MakeLobby()
---   if game.surfaces[LOBBY_NAME] == nil then
---     game.create_surface(LOBBY_NAME, { width = 96, height = 32, starting_area = "big", water = "none" })
---   end
--- end -- MakeLobby

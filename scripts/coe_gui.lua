@@ -55,26 +55,42 @@ function TPtoPlayer(player, frame)
 end -- TPtoPlayer
 
 
--- teleports player after checking if target is safe - loops until success
+-- teleports player after checking if target is safe - loops until success / limit
 function PerformTeleport(player, destination, dest_name) 
-  destination.x = destination.x + GetRandomAmount(WOBBLE)
-  destination.y = destination.y + GetRandomAmount(WOBBLE)
+
+  CheckAndCreateChunk(destination)
 
   -- loop until valid teleport destination can be found
   local valid_dest = false
   local count = 0
   while valid_dest == false and count <= 100 do
-     if global.coe.surface.can_place_entity{name="character", position = {destination.x, destination.y}} then
-       valid_dest = true
-       destination.x = destination.x + GetRandomAmount(WOBBLE/2)
-       destination.y = destination.y + GetRandomAmount(WOBBLE/2)
-      end
-     count = count + 1 -- limits to prevent infinate loop
-   end
+    if global.coe.surface.can_place_entity({name="character", position = destination}) then
+      valid_dest = true
+    else
+      destination.x = destination.x + GetRandomAmount(WOBBLE/2)
+      destination.y = destination.y + GetRandomAmount(WOBBLE/2)
+    end
+    count = count + 1 -- limits to prevent infinate loop
+  end
 
-  game.print("Teleported: " .. player.name .. " to " .. dest_name .. "  (" .. destination.x .. "," .. destination.y .. ")")
-  player.teleport(destination, global.coe.surface)
-end
+  local result = false
+  if valid_dest then
+    game.print({"", {"coe.teleported"}, player.name, {"coe.to"}, dest_name, "  (", destination.x, ",", destination.y, ") "})
+    result = player.teleport(destination, global.coe.surface)
+  end
+  
+  if result == false then
+    player.print({"", {"coe.unable-to-teleport"}, player.name, {"coe.to"}, dest_name, "  (", destination.x, ",", destination.y, ") ", {"coe.count"}, count})
+  end
+end -- PerformTeleport
+
+
+function CheckAndCreateChunk(position)
+  local surface = global.coe.surface
+  if surface.is_chunk_generated(position) then return end
+  surface.request_to_generate_chunks(position, 1)
+  surface.force_generate_chunk_requests()
+end -- CheckAndCreateChunk
 
 
 function ShowTargetChoices(event, player)
