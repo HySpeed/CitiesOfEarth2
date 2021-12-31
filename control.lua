@@ -8,6 +8,8 @@
 --
 -- Feel free to re-use anything you want. It would be nice to give credit where you can.
 
+if script.active_mods["gvv"] then require("__gvv__.gvv")() end
+
 local event_handler = require("event_handler")
 MOD_GUI = require("mod-gui")
 
@@ -15,11 +17,13 @@ require("data/config")
 require("data/cities")
 require("data/worlds")
 require("scripts/coe_init")
+require("scripts/coe_actions")
 require("scripts/coe_gui")
-require("scripts/coe_setup")
 require("scripts/coe_silo")
+require("scripts/coe_utils")
 require("scripts/oddler_world_gen")
 
+--==============================================================================
 
 script.on_init(function() OnInit() end)
 script.on_event(defines.events.on_gui_click,          function(event) ProcessGuiEvent(event) end)
@@ -32,7 +36,7 @@ script.on_event(defines.events.on_player_died,        function(event) RecordPlay
 script.on_event(defines.events.on_rocket_launched,    function(event) RecordRocketLaunch(event) end)
 script.on_event(defines.events.on_runtime_mod_setting_changed, function(event) RuntimeSettingChanged(event) end)
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 function OnInit()
 
@@ -48,7 +52,7 @@ function OnPlayerCreated(event)
 
   local player = game.players[event.player_index]
   CreateButton_ShowTargets(player)
-  player.teleport({ GetRandomAmount(WOBBLE), GetRandomAmount(WOBBLE) }, game.surfaces[SURFACE_NAME])
+  TPtoCity(player, nil, global.coe.spawn_city_name)
 
 end -- OnPlayerCreated
 
@@ -64,24 +68,14 @@ function OnPlayerJoined(event)
 -- TODO: ONLY ENABLE IN DEV
 -- EnableDevConfiguration()
 -- TODO: ONLY ENABLE IN DEV
-end
+end -- OnPlayerJoined
 
 
 --------------------------------------------------------------------------------
 
 function OnChunkGenerated(event)
   GenerateChunk_World(event)
-  if global.coe.pre_place_silo and not global.coe.silo_created then
-    local silo_position = CalcTPOffset(global.coe.silo_city_name)
-      --create tiles around silo when generating chunk (for performance, do it only when chunk is generated, not before)
-    if ((event.area.left_top.x  <= silo_position.x+7  and silo_position.x+7  <= event.area.right_bottom.x)  or
-        (event.area.left_top.x  <= silo_position.x+21 and silo_position.x+21 <= event.area.right_bottom.x)) and
-       ((event.area.left_top.y  <= silo_position.y+7  and silo_position.y+7  <= event.area.right_bottom.y)  or
-        (event.area.left_top.y  <= silo_position.y+21 and silo_position.y+21 <= event.area.right_bottom.y)) then
-          PlaceSilo(global.coe.surface, silo_position)
-          SetSiloTiles(global.coe.surface, silo_position)
-    end
-  end
+  CheckAndPlaceSilo(event)
 end -- OnChunkGenerated
 
 --------------------------------------------------------------------------------
@@ -90,44 +84,9 @@ function RecordPlayerDeath(event)
   if global.coe.launches_per_death <= 0 or global.coe.launch_success then return end
 
   global.coe.launches_to_win = global.coe.launches_to_win + global.coe.launches_per_death
-  game.print({"", {"coe.death-of"}, game.players[event.player_index].name, {"coe.increased-launches"}, tostring(global.coe.launches_per_death)})
-  game.print({"", tostring(global.coe.launches_to_win - global.coe.rockets_launched), {"coe.more-rockets"}, ""})
+  game.print({"",  {"coe.text-mod-print-name"}, {"coe.text-death-of"}, game.players[event.player_index].name, {"coe.text-increased-launches"}, tostring(global.coe.launches_per_death)})
+  game.print({"",  {"coe.text-mod-print-name"}, tostring(global.coe.launches_to_win - global.coe.rockets_launched), {"coe.text-more-rockets"}, ""})
 end -- RecordPlayerDeath
-
---------------------------------------------------------------------------------
-
-function RecordRocketLaunch(event)
-  if global.coe.launches_per_death <= 0 then return end
-
-  local rocket = event.rocket
-  if not (rocket and rocket.valid) then return end
-
-  global.coe.launch_success = global.coe.launch_success or false
-  if global.coe.launch_success then return end
-
-  --  check contents of rocket - do not count empty rockets
-  if event.rocket.has_items_inside() then
-    global.coe.rockets_launched = global.coe.rockets_launched + 1
-    if global.coe.rockets_launched >= global.coe.launches_to_win then
-      global.coe.launch_success = true
-      game.set_game_state
-      {
-        game_finished = true,
-        player_won = true,
-        can_continue = true,
-        victorious_force = rocket.force
-      }
-      return
-    else
-      game.print({"", tostring(global.coe.rockets_launched),  {"coe.rockets-launched"}, ""})
-      game.print({"", tostring(global.coe.launches_to_win - global.coe.rockets_launched), {"coe.more-rockets"}, ""})
-    end
-  else
-    game.print({"coe.empty-rocket"})
-    game.print({"", tostring(global.coe.launches_to_win - global.coe.rockets_launched), {"coe.more-rockets"}, ""})
-  end
-
-end --RecordRocketLaunch
 
 --------------------------------------------------------------------------------
 
@@ -145,20 +104,28 @@ end -- RemoveSiloCrafting
 function RuntimeSettingChanged(event)
   if event.setting == "coe2_tp-to-city" then
     if settings.global["coe2_tp-to-city"].value == true then
-      game.print({"coe.tp-to-city-enabled"})
+      game.print({"coe.text-tp-to-city-enabled"})
     else
-      game.print({"coe.tp-to-city-disabled"})
+      game.print({"coe.text-tp-to-city-disabled"})
     end
   end
 
   if event.setting == "coe2_tp-to-player" then
     if settings.global["coe2_tp-to-player"].value == true then
-      game.print({"coe.tp-to-player-enabled"})
+      game.print({"coe.text-tp-to-player-enabled"})
     else
-      game.print({"coe.tp-to-player-disabled"})
+      game.print({"coe.text-tp-to-player-disabled"})
     end
   end
-end 
+
+  if event.setting == "coe2_show-offline-players" then
+    if settings.global["coe2_show-offline-players"].value == true then
+      game.print({"coe.text-show-offline-players-enabled"})
+    else
+      game.print({"coe.text-show-offline-players-disabled"})
+    end
+  end
+end -- RuntimeSettingChanged
 
 --------------------------------------------------------------------------------
 
