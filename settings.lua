@@ -1,6 +1,10 @@
--- setup the mod configuration values on 'New Game'
+-- settings.lua
+
+-- setup the mod configuration values (startup and runtime)
 require("data/cities")
 require("data/worlds")
+
+--==============================================================================
 
 -- Get the world names from worlds
 local world_names = {}
@@ -80,5 +84,12 @@ data:extend({
   setting_type = "runtime-global",
   default_value = true,
   order = "b"
-}
+  },
+  {
+    type = "bool-setting",
+    name = "coe2_show-offline-players",
+    setting_type = "runtime-global",
+    default_value = true,
+    order = "c"
+    }
 })

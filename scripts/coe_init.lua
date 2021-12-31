@@ -1,5 +1,7 @@
 -- coe_init
 
+--==============================================================================
+
 function InitSettings()
 
   -- coe data structure
@@ -19,8 +21,8 @@ function InitSettings()
 
 -----  -----  ----- ----- -----  -----  ----- ----- -----  -----  ----- -----
 
-  -- Load mod settings
--- Which World Map to use ('Worlds' is defined in "data/worlds.lua")
+-- Load mod startup settings
+  -- Which World Map to use ('Worlds' is defined in "data/worlds.lua")
   local world_map = settings.startup["coe2_world-map"].value
   global.coe.map_index = Worlds[world_map].map_index
   local detail_factor = Worlds[world_map].detail_factor

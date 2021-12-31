@@ -69,6 +69,9 @@ City information was pulled from [Mapcarta](https://mapcarta.com/).
 * **You must delete mod-settings.dat for changes to cities.lua to be available.**  If you change a lua data file, you'll need to delete the mod-settings.dat file.
 * * **GAMES STARTED WITH 1.3.0 WILL NEED TO BE RESTARTED** (sorry)
 
+v1.3.5
+* Sorted teleport to Player list, added 'offline' notation
+
 v1.3.3
 * Fixed text for translations
 
