@@ -7,6 +7,7 @@ function SetupCityNames()
   global.coe.city_names, global.coe.city_count = BuildCityNameList()
   global.coe.gui_city_names = global.coe.city_names
   table.remove(global.coe.gui_city_names, 1) -- "Random City Location"
+  table.insert(global.coe.gui_city_names, 1, "Select a Target") -- "Select a target"
 end -- SetupCityNames
 
 -------------------------------------------------------------------------------

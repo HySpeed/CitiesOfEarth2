@@ -11,13 +11,13 @@ function InitSettings()
     ["players"] = {},
     launches_to_win = 1,
     rockets_launched = 0,
-    launch_success = false
+    launch_success = false 
   }
 
   global.coe.surface = game.surfaces[SURFACE_NAME]
-  if global.coe.city_names == nil then
+  -- if global.coe.city_names == nil then
     SetupCityNames()
-  end
+  -- end
 
 -----  -----  ----- ----- -----  -----  ----- ----- -----  -----  ----- -----
 

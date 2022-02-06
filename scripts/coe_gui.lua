@@ -73,6 +73,8 @@ function BuildTargetListFrame(gui, player)
     direction = "vertical"
   })
 
+  -- local gui_city_names = global.coe.gui_city_names
+  -- table.insert(gui_city_names, 1, global.coe.select_target_choice)
   city_flow.add({
     type = "drop-down",
     name = "coe_cities_dropdown",
@@ -87,7 +89,7 @@ function BuildTargetListFrame(gui, player)
   })
 
   -- only enable if enabled in settings
-  if settings.global["coe2_tp-to-city"].value == true then
+  if settings.global["coe2_tp-to-city"].value == true then -- and city_flow["coe_cities_dropdown"].selected_index ~= 1 then
     city_flow["coe_button_city_go"].enabled = true
     city_flow["coe_button_city_go"].caption = {"coe.button-city-go-enabled"}
   else

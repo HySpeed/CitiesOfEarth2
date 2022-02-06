@@ -5,13 +5,18 @@
 -- if called from UI, 'frame' will have a link to the UI dropdown
 -- if called from OnPlayerJoined, 'destination_name' will have the city name
 function TPtoCity(player, frame, destination_name)
-  if( destination_name == nil ) then
-    local ui_city_list = frame.coe_cities_dropdown
-    destination_name = ui_city_list.get_item(ui_city_list.selected_index)
+local selected_index = 0
+if( destination_name == nil ) then -- and destination_name ~= global.coe.select_target_choice) then
+  local ui_city_list = frame.coe_cities_dropdown
+  selected_index = ui_city_list.selected_index
+    destination_name = ui_city_list.get_item(selected_index)
   end
-  local destination = CalcTPOffset(destination_name)
 
-  PerformTeleport(player, destination, destination_name)
+  if ( selected_index ~= 1 ) then
+    local destination = CalcTPOffset(destination_name)
+
+    PerformTeleport(player, destination, destination_name)
+  end
 end -- TPtoCity
 
 --------------------------------------------------------------------------------
