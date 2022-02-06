@@ -1,5 +1,7 @@
 -- coe_init
 
+--==============================================================================
+
 function InitSettings()
 
   -- coe data structure
@@ -9,18 +11,18 @@ function InitSettings()
     ["players"] = {},
     launches_to_win = 1,
     rockets_launched = 0,
-    launch_success = false
+    launch_success = false 
   }
 
   global.coe.surface = game.surfaces[SURFACE_NAME]
-  if global.coe.city_names == nil then
+  -- if global.coe.city_names == nil then
     SetupCityNames()
-  end
+  -- end
 
 -----  -----  ----- ----- -----  -----  ----- ----- -----  -----  ----- -----
 
-  -- Load mod settings
--- Which World Map to use ('Worlds' is defined in "data/worlds.lua")
+-- Load mod startup settings
+  -- Which World Map to use ('Worlds' is defined in "data/worlds.lua")
   local world_map = settings.startup["coe2_world-map"].value
   global.coe.map_index = Worlds[world_map].map_index
   local detail_factor = Worlds[world_map].detail_factor
