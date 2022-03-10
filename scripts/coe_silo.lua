@@ -7,15 +7,15 @@ function SetSiloTiles(surface, tiles_position)
   local i = 1
   for dx = -6,6 do
     for dy = -6,6 do
-      tiles[i] = {name = "concrete", position = {tiles_position.x+dx+SHIFT, tiles_position.y+dy+SHIFT}}
+      tiles[i] = {name = "concrete", position = {tiles_position.x+dx+SILO_SHIFT, tiles_position.y+dy+SILO_SHIFT}}
       i=i+1
     end
   end
   for df = -6,6 do
-    tiles[i]   = {name = "hazard-concrete-left", position = {tiles_position.x+df+SHIFT, tiles_position.y-7+SHIFT}}
-    tiles[i+1] = {name = "hazard-concrete-left", position = {tiles_position.x+df+SHIFT, tiles_position.y+7+SHIFT}}
-    tiles[i+2] = {name = "hazard-concrete-left", position = {tiles_position.x-7+SHIFT, tiles_position.y+df+SHIFT}}
-    tiles[i+3] = {name = "hazard-concrete-left", position = {tiles_position.x+7+SHIFT, tiles_position.y+df+SHIFT}}
+    tiles[i]   = {name = "hazard-concrete-left", position = {tiles_position.x+df+SILO_SHIFT, tiles_position.y-7+SILO_SHIFT}}
+    tiles[i+1] = {name = "hazard-concrete-left", position = {tiles_position.x+df+SILO_SHIFT, tiles_position.y+7+SILO_SHIFT}}
+    tiles[i+2] = {name = "hazard-concrete-left", position = {tiles_position.x-7+SILO_SHIFT, tiles_position.y+df+SILO_SHIFT}}
+    tiles[i+3] = {name = "hazard-concrete-left", position = {tiles_position.x+7+SILO_SHIFT, tiles_position.y+df+SILO_SHIFT}}
     i=i+4
   end
   surface.set_tiles(tiles, true)
@@ -35,7 +35,7 @@ function PlaceSilo(surface, silo_position)
     end
 
     -- Create the silo first to create the chunk (otherwise tiles won't be settable)
-    local silo = surface.create_entity{name = "rocket-silo", position = {silo_position.x+SHIFT, silo_position.y+SHIFT}, force = "player", move_stuck_players=true}
+    local silo = surface.create_entity{name = "rocket-silo", position = {silo_position.x+SILO_SHIFT, silo_position.y+SILO_SHIFT}, force = "player", move_stuck_players=true}
     silo.destructible = false
     silo.minable = false
     global.coe.silo_created = true;

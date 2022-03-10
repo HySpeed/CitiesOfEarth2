@@ -1,4 +1,5 @@
 -- coe_init
+-- initialization functions
 
 --==============================================================================
 
@@ -14,10 +15,8 @@ function InitSettings()
     launch_success = false 
   }
 
-  global.coe.surface = game.surfaces[SURFACE_NAME]
-  -- if global.coe.city_names == nil then
-    SetupCityNames()
-  -- end
+  -- global.coe.surface = game.surfaces[SURFACE_NAME]
+  -- GetCityNames()
 
 -----  -----  ----- ----- -----  -----  ----- ----- -----  -----  ----- -----
 
@@ -28,13 +27,15 @@ function InitSettings()
   local detail_factor = Worlds[world_map].detail_factor
 
   -- Spawn location
+  local city_names = GetCityNames()
   local spawn_city_name = settings.startup["coe2_spawn-position"].value
-  if spawn_city_name == "Random City Location" then
-    local spawn_index = 1 -- default to Africa
-    spawn_index = math.random(2, global.coe.city_count) - 1 -- skip first entry "random"
-    spawn_city_name = global.coe.city_names[spawn_index]
+  local spawn_city_index = GetIndex( city_names, spawn_city_name )
+  if spawn_city_name == RANDOM_CITY then
+    spawn_city_index = math.random( 1, #city_names )
+    spawn_city_name = city_names[spawn_city_index]
   end
   global.coe.spawn_city_name = spawn_city_name
+  global.coe.spawn_city_index = spawn_city_index
   log("~spawn : " .. global.coe.spawn_city_name)
   
   -- Map Scaling factor
@@ -44,12 +45,13 @@ function InitSettings()
   -- Pre-Place Silo
   global.coe.pre_place_silo = settings.startup["coe2_pre-place-silo"].value
   local silo_city_name = settings.startup["coe2_silo-position"].value
-  if silo_city_name == "Random City Location" then
-    local silo_index = 1 -- default to Africa
-    silo_index = math.random(2, global.coe.city_count) -1 -- skip first entry "random"
-    silo_city_name = global.coe.city_names[silo_index]
+  local silo_city_index = GetIndex( city_names, silo_city_name )
+  if silo_city_name == RANDOM_CITY then
+    silo_city_index = math.random( 1, #city_names )
+    silo_city_name = city_names[silo_city_index]
   end
   global.coe.silo_city_name = silo_city_name
+  global.coe.silo_city_index = silo_city_index
   log("~silo : " .. global.coe.silo_city_name)
 
   -- Launches per Death
@@ -61,9 +63,9 @@ function InitSettings()
 
   -- Enable teleport controls (stored for displaying messages later)
   global.coe.tp_to_city = settings.global["coe2_tp-to-city"].value
-  global.coe.tp_to_player = settings.global["coe2_tp-to-player"].value
 
 -----  -----  ----- ----- -----  -----  ----- ----- -----  -----  ----- -----
+
 -- Setup based on chosen settings
 -- Get spawn by looking up the selection and map index in 'Cities' table
 local spawn = Cities[global.coe.spawn_city_name][global.coe.map_index]
@@ -87,3 +89,22 @@ global.coe.spawn = spawn
 
   return world_map
 end -- InitSettings
+
+--------------------------------------------------------------------------------
+
+function SetupPlayer( player_index )
+  if not global.coe then
+    global.coe = {}
+  end
+  if not global.coe[player_index] then -- ui button
+    global.coe[player_index] = {
+      teleport_control_visible = false
+    }
+  end
+  if not global.coe.surface then
+    global.coe.surface = game.surfaces[SURFACE_NAME]
+  end
+  SetupPlayerUI( player_index )
+end -- SetupPlayer
+
+--------------------------------------------------------------------------------

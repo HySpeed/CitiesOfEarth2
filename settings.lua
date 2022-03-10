@@ -1,6 +1,7 @@
 -- settings.lua
 
 -- setup the mod configuration values (startup and runtime)
+require("data/config")
 require("data/cities")
 require("data/worlds")
 
@@ -17,6 +18,7 @@ local city_names = {}
 for city_name, _ in pairs(Cities) do
     table.insert(city_names, city_name)
 end
+table.insert( city_names, 1, RANDOM_CITY )
 
 -- startup settings
 data:extend({
@@ -77,19 +79,5 @@ data:extend({
     setting_type = "runtime-global",
     default_value = true,
     order = "a"
-  },
-  {
-  type = "bool-setting",
-  name = "coe2_tp-to-player",
-  setting_type = "runtime-global",
-  default_value = true,
-  order = "b"
-  },
-  {
-    type = "bool-setting",
-    name = "coe2_show-offline-players",
-    setting_type = "runtime-global",
-    default_value = true,
-    order = "c"
-    }
+  }
 })
