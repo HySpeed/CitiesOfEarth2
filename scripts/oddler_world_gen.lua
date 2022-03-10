@@ -10,7 +10,7 @@ require("worlds/earth_pacific_detailed")
 function InitWorld(world_map)
   -- log("~coe~InitWorld - start")
 
-  -- factorio world code (will be moved to function)
+  -- factorio world code
   --Terrain codes should be in sync with the ConvertMap code
   global.coe.terrain_codes = {
     ["_"] = "out-of-map",

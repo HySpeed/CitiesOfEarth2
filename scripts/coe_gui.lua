@@ -1,152 +1,103 @@
 -- coe_gui.lua
 
+local mod_gui = require("mod-gui")
 require("scripts/coe_actions")
 require("scripts/coe_utils")
 
 --==============================================================================
 
-function ProcessGuiEvent(event)
-  if not event.element then return end
-
+function ProcessGuiEvent( event )
+-- if dialog is open, close it.  If closed, open it
   local player = game.players[event.player_index]
-  local element = event.element
 
-  if element.name == "coe_button_show_targets" then
-    ShowTargetChoices(event, player)
-  elseif element.name == "coe_button_city_go" then
-    TPtoCity(player, element.parent, nil)
-    element.parent.parent.parent.destroy()
-  elseif element.name == "coe_button_player_go" then
-    TeleportToPlayer(player, element.parent)
-    element.parent.parent.parent.destroy()
-  elseif element.name == "coe_button_cancel" then
-    element.parent.parent.destroy()
-  elseif element.name == "coe_button_info_close" then
-    element.parent.destroy()
+  if global.coe and event.element.name == "coe_button_show_targets" then
+    if global.coe[event.player_index].teleport_control_visible then
+      CloseUI( player )
+    else
+      OpenUI( player )
+    end
+  elseif global.coe and event.element.name == "coe_teleport_button" then
+    -- get selection lookup city from name
+    local ui_city_list = event.element.parent.coe_city_list_dropdown
+    local selected_index = ui_city_list.selected_index
+    local city_name = ui_city_list.get_item( selected_index )
+    PerformTeleport( event.player_index, city_name )
+    CloseUI( player )
   end
 end -- ProcessGuiEvent
 
 -------------------------------------------------------------------------------
 
-function CreateButton_ShowTargets(player)
-  local flow = MOD_GUI.get_button_flow(player)
-  if not flow.coe_button_show_targets then
-    local button = flow.add({
-      type = "sprite-button",
-      name = "coe_button_show_targets",
-      style = MOD_GUI.button_style,
-      sprite = "show_targets_list",
-      tooltip = {"coe-tooltip.button-show-targets"}
-    })
+function SetupPlayerUI( player_index )
+  local player = game.players[player_index]
+
+  -- remove any old ui frame component
+  -- ? is this needed?
+  -- if player.gui["left"][player_index .. "_coe_control_frame"] then
+  --   player.gui["left"][player_index .. "_coe_control_frame"].destroy()
+  -- end
+
+  -- setup new button, start by removing old button if it exists
+  if mod_gui.get_button_flow( player ).coe_button_show_targets then
+    mod_gui.get_button_flow( player ).coe_button_show_targets.destroy()
   end
-end -- CreateButton_ShowTargets
+
+  mod_gui.get_button_flow( player ).add {
+    name    = "coe_button_show_targets",
+    sprite  = "show_targets_list",
+    style   = "mod_gui_button",
+    tooltip = {"coe-tooltip.button-show-targets"},
+    type    = "sprite-button"
+  }
+end -- SetupPlayerUI
 
 -------------------------------------------------------------------------------
 
-function ShowTargetChoices(event, player)
-  local gui = player.gui.center
-  if gui.coe_choose_target == nil then
-    BuildTargetListFrame(gui, player)
-  end -- if
-end -- ShowTargetChoices
-
--------------------------------------------------------------------------------
-
-function BuildTargetListFrame(gui, player)
-  local frame = gui.add({
-    type = "frame",
-    name = "coe_choose_target",
-    style = "frame",
-    direction = "vertical",
-    caption = {"coe.title-choose-target"}
-  })
-
-  local city_and_player_flow = frame.add({
-    type = "flow",
-    name = "coe_city_and_player_flow",
-    direction = "horizontal"
-  })
-
-  local city_flow = city_and_player_flow.add({
-    type = "flow",
-    name = "coe_city_flow",
-    direction = "vertical"
-  })
-
-  -- local gui_city_names = global.coe.gui_city_names
-  -- table.insert(gui_city_names, 1, global.coe.select_target_choice)
-  city_flow.add({
+function OpenUI( player )
+  local gui = player.gui.left
+  local destinations_frame =
+      gui.add {
+      type = "frame",
+      name = "coe_destinations_frame",
+      direction = "vertical",
+      caption = {"coe.title-choose-target"}
+  }
+  
+  -- add drop down
+  destinations_frame.add({
     type = "drop-down",
-    name = "coe_cities_dropdown",
-    items = global.coe.gui_city_names,
-    selected_index = 1
+    name = "coe_city_list_dropdown",
+    items = GetCityNames(),
+    selected_index = global.coe.spawn_city_index
   })
-
-  city_flow.add({
+  
+  -- add button for teleport
+  destinations_frame.add({
     type = "button",
-    name = "coe_button_city_go",
-    caption = {"coe.button-city-go"}
+    name = "coe_teleport_button"
   })
 
   -- only enable if enabled in settings
-  if settings.global["coe2_tp-to-city"].value == true then -- and city_flow["coe_cities_dropdown"].selected_index ~= 1 then
-    city_flow["coe_button_city_go"].enabled = true
-    city_flow["coe_button_city_go"].caption = {"coe.button-city-go-enabled"}
+  local teleport_button = destinations_frame["coe_teleport_button"]
+  if settings.global["coe2_tp-to-city"].value == true then
+    teleport_button.enabled = true
+    teleport_button.caption = {"coe.button-city-go-enabled"}
   else
-    city_flow["coe_button_city_go"].enabled = false
-    city_flow["coe_button_city_go"].caption = {"coe.button-city-go-disabled"}
+    teleport_button.enabled = false
+    teleport_button.caption = {"coe.button-city-go-disabled"}
   end
+  global.coe[player.index].teleport_control_visible = true
+end -- OpenUI
 
-local player_flow = city_and_player_flow.add({
-    type = "flow",
-    name = "coe_player_flow",
-    direction = "vertical"
-  })
+--------------------------------------------------------------------------------
 
-  local player_names = BuildPlayerNameList()
-  player_flow.add({
-    type = "drop-down",
-    name = "coe_players_dropdown",
-    items = player_names,
-    selected_index = 1
-  })
-
-  player_flow.add({
-    type = "button",
-    name = "coe_button_player_go"
-  })
-
-  -- only enable if enabled in settings
-  if settings.global["coe2_tp-to-player"].value == true then
-    player_flow["coe_button_player_go"].enabled = true
-    player_flow["coe_button_player_go"].caption = {"coe.button-player-go-enabled"}
-  else
-    player_flow["coe_button_player_go"].enabled = false
-    player_flow["coe_button_player_go"].caption = {"coe.button-player-go-disabled"}
+function CloseUI( player )
+  if player then
+    if player.gui.left.coe_destinations_frame then
+      player.gui.left.coe_destinations_frame.destroy()
+    end
   end
+  global.coe[player.index].teleport_control_visible = false
+end -- CloseUI
 
-  local controls_flow = frame.add({
-    type = "flow",
-    name = "coe_controls_flow",
-    direction = "horizontal"
-  })
-
-  controls_flow.add({
-    type = "button",
-    name = "coe_button_cancel",
-    caption = {"coe.button-cancel"}
-  })
-
-  frame.add({
-    type = "label",
-    name = "coe_text-note_delay_1",
-    caption = {"coe.text-note-delay-1"}
-  })
-
-  frame.add({
-    type = "label",
-    name = "coe_text-note_delay_2",
-    caption = {"coe.text-note-delay-2"}
-  })
-
-end -- BuildTargetListFrame
+--------------------------------------------------------------------------------

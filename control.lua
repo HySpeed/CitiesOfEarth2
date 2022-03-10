@@ -6,12 +6,10 @@
 -- -- MojoD -- Frontier Extended
 -- -- -- The Pre-Placed Silo is from his work
 --
--- Feel free to re-use anything you want. It would be nice to give credit where you can.
-
-if script.active_mods["gvv"] then require("__gvv__.gvv")() end
+-- You may re-use anything written here. It would be nice to give credit where you can.
 
 local event_handler = require("event_handler")
-MOD_GUI = require("mod-gui")
+local mod_gui = require("mod-gui")
 
 require("data/config")
 require("data/cities")
@@ -26,50 +24,46 @@ require("scripts/oddler_world_gen")
 --==============================================================================
 
 script.on_init(function() OnInit() end)
+script.on_configuration_changed( function(event) ConfigurationChanged(event) end )
+
 script.on_event(defines.events.on_gui_click,          function(event) ProcessGuiEvent(event) end)
+script.on_event(defines.events.on_runtime_mod_setting_changed, function(event) RuntimeSettingChanged(event) end)
 
 script.on_event(defines.events.on_chunk_generated,    function(event) OnChunkGenerated(event) end)
+
 script.on_event(defines.events.on_research_finished,  function(event) RemoveSiloCrafting(event) end)
 script.on_event(defines.events.on_player_created,     function(event) OnPlayerCreated(event) end)
 script.on_event(defines.events.on_player_joined_game, function(event) OnPlayerJoined(event) end)
 script.on_event(defines.events.on_player_died,        function(event) RecordPlayerDeath(event) end)
 script.on_event(defines.events.on_rocket_launched,    function(event) RecordRocketLaunch(event) end)
-script.on_event(defines.events.on_runtime_mod_setting_changed, function(event) RuntimeSettingChanged(event) end)
 
 --------------------------------------------------------------------------------
 
 function OnInit()
-
   SkipIntro()
   InitWorld(InitSettings())
-
+  for _, player in pairs( game.players ) do
+    SetupPlayer( player.index )
+  end
 end -- OnInit
 
 --------------------------------------------------------------------------------
 
 function OnPlayerCreated(event)
-  if event.player_index == nil then return end
-
-  local player = game.players[event.player_index]
-  CreateButton_ShowTargets(player)
-  TPtoCity(player, nil, global.coe.spawn_city_name)
-
+--  local player = game.players[event.player_index]
+--  CreateButton_ShowTargets(player)
+--  SetupCityNames()
+  SetupPlayer( event.player_index )
+  local city_name = global.coe.spawn_city_name
+  PerformTeleport( event.player_index, city_name )
 end -- OnPlayerCreated
-
 
 --------------------------------------------------------------------------------
 
 function OnPlayerJoined(event)
-  global.coe.surface = game.surfaces[SURFACE_NAME]
-  -- if global.coe.city_names == nil then
-    SetupCityNames()
-  -- end
-  
--- TODO: ONLY ENABLE IN DEV
--- EnableDevConfiguration()
--- TODO: ONLY ENABLE IN DEV
+--  SetupCityNames()
+  SetupPlayer( event.player_index )
 end -- OnPlayerJoined
-
 
 --------------------------------------------------------------------------------
 
@@ -88,6 +82,21 @@ function RecordPlayerDeath(event)
   game.print({"",  {"coe.text-mod-print-name"}, tostring(global.coe.launches_to_win - global.coe.rockets_launched), {"coe.text-more-rockets"}, ""})
 end -- RecordPlayerDeath
 
+--------------------------------------------------------------------------------
+
+function ConfigurationChanged( event )
+  -- version migrations
+  -- TODO: setup spawn & silo city values on loading saved game
+  local city_names = GetCityNames()
+  global.coe.spawn_city_index = GetIndex( city_names, global.coe.spawn_city_name )
+  for _, player in pairs( game.players ) do
+    SetupPlayer( player.index )
+  end
+  log("~ global.coe.spawn_city_name : " .. global.coe.spawn_city_name)
+  log("~ global.coe.spawn_city_index: " .. global.coe.spawn_city_index)
+  log("~ global.coe.silo_city_name  : " .. global.coe.silo_city_name)
+end -- ConfigurationChanged
+  
 --------------------------------------------------------------------------------
 
 function RemoveSiloCrafting(event)
@@ -109,22 +118,6 @@ function RuntimeSettingChanged(event)
       game.print({"coe.text-tp-to-city-disabled"})
     end
   end
-
-  if event.setting == "coe2_tp-to-player" then
-    if settings.global["coe2_tp-to-player"].value == true then
-      game.print({"coe.text-tp-to-player-enabled"})
-    else
-      game.print({"coe.text-tp-to-player-disabled"})
-    end
-  end
-
-  if event.setting == "coe2_show-offline-players" then
-    if settings.global["coe2_show-offline-players"].value == true then
-      game.print({"coe.text-show-offline-players-enabled"})
-    else
-      game.print({"coe.text-show-offline-players-disabled"})
-    end
-  end
 end -- RuntimeSettingChanged
 
 --------------------------------------------------------------------------------
@@ -140,14 +133,3 @@ function SkipIntro()
 end -- SkipIntro
 
 --------------------------------------------------------------------------------
-
-function EnableDevConfiguration()
-  -- DEV: disable aliens
-  local mgs = global.coe.surface.map_gen_settings
-  mgs.autoplace_controls["enemy-base"].size = 0
-  global.coe.surface.map_gen_settings = mgs
-  for _, entity in pairs(global.coe.surface.find_entities_filtered({force="enemy"})) do
-    entity.destroy()
-  end
-  game.print("! development mode enabled !")
-end -- EnableDevConfiguration

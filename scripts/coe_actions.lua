@@ -1,70 +1,63 @@
 -- coe_actions.lua
+require("scripts/coe_utils")
 
 --==============================================================================
 
 -- if called from UI, 'frame' will have a link to the UI dropdown
 -- if called from OnPlayerJoined, 'destination_name' will have the city name
-function TPtoCity(player, frame, destination_name)
-local selected_index = 0
-if( destination_name == nil ) then -- and destination_name ~= global.coe.select_target_choice) then
-  local ui_city_list = frame.coe_cities_dropdown
-  selected_index = ui_city_list.selected_index
-    destination_name = ui_city_list.get_item(selected_index)
-  end
+-- function TPtoCity(player_index, frame, destination_name)
+--   local selected_index = 0
+--   if destination_name == nil then
+--     local ui_city_list = frame.coe_cities_dropdown
+--     selected_index = ui_city_list.selected_index
+--     destination_name = ui_city_list.get_item(selected_index)
+--   end
 
-  if ( selected_index ~= 1 ) then
-    local destination = CalcTPOffset(destination_name)
+--   if selected_index ~= 1 then
+--     local destination = CalcTPOffset(destination_name)
 
-    PerformTeleport(player, destination, destination_name)
-  end
-end -- TPtoCity
-
---------------------------------------------------------------------------------
-
-function TeleportToPlayer(player, frame)
-  local ui_player_list = frame.coe_players_dropdown
-  local target_player_name = ui_player_list.get_item(ui_player_list.selected_index)
-  local target_player = GetPlayerByName(target_player_name)
-  local destination = target_player.position
-
-  PerformTeleport(player, destination, target_player_name)
-end -- TeleportToPlayer
+--     PerformTeleport(player_index, destination, destination_name)
+--   end
+-- end -- TPtoCity
 
 --------------------------------------------------------------------------------
 
 -- teleports player after checking if target is safe - loops until success / limit
-function PerformTeleport(player, destination, destination_name) 
-
-  CheckAndCreateChunk(destination)
+function PerformTeleport(player_index, destination_name) 
+  local player = game.players[player_index]
+  local destination_position = CalcTPOffset(destination_name)
+  CheckAndCreateChunk(player.surface, destination_position)
 
   -- loop until valid teleport destination can be found
   local valid_dest = false
   local count = 0
-  while valid_dest == false and count <= 100 do
-    if global.coe.surface.can_place_entity({name="character", position = destination}) then
+  while valid_dest == false and count < 100 do
+    if player.surface.can_place_entity({name="character", position = destination_position}) then
       valid_dest = true
     else
-      destination.x = destination.x + GetRandomAmount(WOBBLE/2)
-      destination.y = destination.y + GetRandomAmount(WOBBLE/2)
+      destination_position.x = destination_position.x + GetRandomAmount(WOBBLE/2)
+      destination_position.y = destination_position.y + GetRandomAmount(WOBBLE/2)
     end
-    count = count + 1 -- limits to prevent infinate loop
+    count = count + 1 -- limit to prevent infinate loop
   end
 
   local result = false
   if valid_dest then
-    game.print({"",  {"coe.text-mod-print-name"}, {"coe.text-teleported"}, player.name, {"coe.text-to"}, destination_name, "  (", destination.x, ",", destination.y, ") "})
-    result = player.teleport(destination, global.coe.surface)
+    game.print({"",  {"coe.text-mod-print-name"}, {"coe.text-teleported"}, player.name, 
+        {"coe.text-to"}, destination_name, "  (", destination_position.x, ",", destination_position.y, ") "})
+    result = player.teleport(destination_position, player.surface)
   end
   
   if result == false then
-    game.print({"",  {"coe.text-mod-print-name"}, {"coe.text-unable-to-teleport"}, player.name, {"coe.text-to"}, destination_name, "  (", destination.x, ",", destination.y, ") ", {"coe.text-count"}, count})
+    game.print({"",  {"coe.text-mod-print-name"}, {"coe.text-unable-to-teleport"}, player.name, 
+        {"coe.text-to"}, destination_name, "  (", destination_position.x, ",", destination_position.y, ") ", 
+        {"coe.text-count"}, count})
   end
 end -- PerformTeleport
 
 --------------------------------------------------------------------------------
 
-function CheckAndCreateChunk(position)
-  local surface = global.coe.surface
+function CheckAndCreateChunk(surface, position)
   if surface.is_chunk_generated(position) then return end
   surface.request_to_generate_chunks(position, 1)
   surface.force_generate_chunk_requests()
@@ -128,7 +121,8 @@ function RecordPlayerDeath(event)
   if global.coe.launches_per_death <= 0 or global.coe.launch_success then return end
 
   global.coe.launches_to_win = global.coe.launches_to_win + global.coe.launches_per_death
-  game.print({"",  {"coe.text-mod-print-name"},  {"coe.text-death-of"}, game.players[event.player_index].name, {"coe.text-increased-launches"}, tostring(global.coe.launches_per_death)})
+  game.print({"",  {"coe.text-mod-print-name"},  {"coe.text-death-of"}, game.players[event.player_index].name, 
+      {"coe.text-increased-launches"}, tostring(global.coe.launches_per_death)})
   game.print({"",  {"coe.text-mod-print-name"},  tostring(global.coe.launches_to_win - global.coe.rockets_launched), {"coe.text-more-rockets"}, ""})
 end -- RecordPlayerDeath
 

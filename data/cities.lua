@@ -6,10 +6,6 @@
 
 
 Cities = {
-    ["Random City Location"] = {
-      ["earth_atlantic"] = { x = nil, y = nil },
-      ["earth_pacific"] =  { x = nil, y = nil }
-    },
     ["Africa, Mali, Bamako"] = {
       ["earth_atlantic"] = { x = 1920, y =  840 },
       ["earth_pacific"] =  { x =  100, y =  870 }
